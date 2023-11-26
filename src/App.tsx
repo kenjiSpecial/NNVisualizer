@@ -7,7 +7,7 @@ import mnist from 'mnist';
 import { BufferGeometry, DoubleSide, MathUtils, Texture, Vector3 } from 'three';
 import { button, useControls } from 'leva';
 import Matrix from 'ml-matrix';
-import { calcSigmoid, calcSoftMax, sigmoid } from './components/functions';
+import { calcSigmoid, calcSoftMax } from './components/functions';
 import { CameraMovement } from './components/camera-movement';
 
 function App() {
@@ -32,11 +32,17 @@ function App() {
   const [data, setData] = useState<
     { W1: number[][]; b1: number[]; W2: number[][]; b2: number[] }[] | null
   >(null);
-  // const count = 0;
   const testDataCnt = 100;
-  const { count } = useControls({
-    count: { value: 0, min: 0, max: testDataCnt - 1, step: 1 },
-  });
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCount((prevCount) => (prevCount + 1) % testDataCnt);
+    }, 300); // 1秒ごとに数値を更新
+
+    return () => {
+      clearInterval(timer); // コンポーネントがアンマウントされたときにタイマーをクリア
+    };
+  }, []);
   const testData = useMemo(() => mnist.set(0, testDataCnt).test, []);
   const paramData = useMemo(() => {
     if (!data) return null;
