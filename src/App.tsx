@@ -18,16 +18,16 @@ function App() {
   const hiddenRowSize = 10;
   const hiddenColSize = 5;
   const outputSize = 10;
-  const outputRowSize = 10;
-  const outputColSize = 1;
+  const outputRowSize = 3;
+  const outputColSize = 4;
 
   const inputPlane = { size: 1 / 14, space: 0.02 }; // const size = 1 / 14       const space = 0.02;
   const hiddenPlane = { size: 0.2, space: 0.08 };
   const outputPlane = { size: 1.2, space: 0.1 };
 
   const inputPos = new Vector3(0, 0, 0);
-  const hiddenPos = new Vector3(0, 0, -2);
-  const outputPos = new Vector3(0, 0, -4);
+  const hiddenPos = new Vector3(0, 0, -4);
+  const outputPos = new Vector3(0, 0, -8);
 
   const [data, setData] = useState<
     { W1: number[][]; b1: number[]; W2: number[][]; b2: number[] }[] | null
@@ -61,6 +61,7 @@ function App() {
     return { wMatrix: wMatrix, hiddenValueMatrix: sigmoidMatrix };
   }, [paramData, testData, count]);
   const hiddenValueMatrix = hiddenValue?.hiddenValueMatrix;
+  console.log(hiddenValueMatrix?.to2DArray());
   const inputHiddenWMatrix = hiddenValue?.wMatrix;
 
   const outputValue = useMemo(() => {
@@ -172,13 +173,19 @@ function App() {
               />
             ) : null}
 
-            {paramArr ? (
+            {paramArr && hiddenValueMatrix && outputValueMatrix ? (
               <DrawLineGroup
                 inputSize={inputSize}
                 hiddenSize={hiddenSize}
                 outputSize={outputSize}
+                inputPos={inputPos}
+                hiddenPos={hiddenPos}
+                outputPos={outputPos}
                 paramW1Arr={paramArr.paramW1Arr}
                 paramW2Arr={paramArr.paramW2Arr}
+                input1DArr={testData[count].input}
+                hidden1DArr={hiddenValueMatrix.to1DArray()}
+                output1DArr={outputValueMatrix.to1DArray()}
                 renderOrder={1}
                 input={
                   {
@@ -281,14 +288,14 @@ type ParamsPixelPlaneProps = JSX.IntrinsicElements['group'] & {
 function hiddenPos(props: {
   index: number;
   rowSize: number;
-  halfRowSize: number;
-  halfColSize: number;
+  colSize: number;
   size: number;
   space: number;
 }) {
-  const { index, rowSize, halfRowSize, halfColSize, size, space } = props;
-  const posX = ((index % rowSize) - halfRowSize) * (size + space);
-  const posY = (-Math.floor(index / rowSize) + halfColSize) * (size + space);
+  const { index, rowSize, colSize, size, space } = props;
+  const posX = ((index % rowSize) - (rowSize - 1) / 2) * (size + space);
+  const posY =
+    (-Math.floor(index / rowSize) + (colSize - 1) / 2) * (size + space);
   const posZ = 0;
   return { posX, posY, posZ };
 }
@@ -298,8 +305,7 @@ function ParamsPixelPlaneMesh(props: ParamsPixelPlaneProps) {
 
   const { size, space } = props;
   const rowSize = props.rowSize;
-  const halfRowSize = rowSize / 2;
-  const halfColSize = props.colSize / 2;
+  const colSize = props.colSize;
 
   for (let i = 0; i < props.hiddenSize; i++) {
     const colorVal = Math.floor(props.hiddenValueArr[i] * 255);
@@ -308,8 +314,7 @@ function ParamsPixelPlaneMesh(props: ParamsPixelPlaneProps) {
     const { posX, posY, posZ } = hiddenPos({
       index: i,
       rowSize,
-      halfRowSize,
-      halfColSize,
+      colSize,
       size,
       space,
     });
@@ -336,13 +341,15 @@ type OutputMeshProps = JSX.IntrinsicElements['group'] & {
 function outputPos(props: {
   index: number;
   rowSize: number;
-  halfRowSize: number;
+  colSize: number;
   size: number;
   space: number;
 }) {
-  const { index, rowSize, halfRowSize, size, space } = props;
-  const posX = ((index % rowSize) - halfRowSize) * (size + space);
-  const posY = 0;
+  const { index, rowSize, size, space, colSize } = props;
+  const newIndex = index === 0 ? 9 : index - 1;
+  const posX = ((newIndex % rowSize) - (rowSize - 1) / 2) * (size + space);
+  const posY =
+    (-Math.floor(newIndex / rowSize) + (colSize - 1) / 2) * (size + space);
   const posZ = 0;
   return { posX, posY, posZ };
 }
@@ -350,14 +357,13 @@ function outputPos(props: {
 function OutputMeshGroup(props: OutputMeshProps) {
   const outputMeshArr = [];
   const { size, space, rowsize } = props;
-  const halfRowSize = rowsize / 2;
   for (let ii = 0; ii < props.outputSize; ii++) {
     const colorVal = Math.floor(props.outputValueArr[ii] * 255);
     const color = `rgb(${colorVal}, ${colorVal}, ${colorVal})`;
     const { posX, posY, posZ } = outputPos({
       index: ii,
       rowSize: rowsize,
-      halfRowSize,
+      colSize: props.colSize,
       size,
       space,
     });
@@ -392,8 +398,14 @@ type drawLineGroup = JSX.IntrinsicElements['group'] & {
   inputSize: number;
   hiddenSize: number;
   outputSize: number;
+  inputPos: Vector3;
+  hiddenPos: Vector3;
+  outputPos: Vector3;
   paramW1Arr: number[][];
   paramW2Arr: number[][];
+  input1DArr: number[];
+  hidden1DArr: number[];
+  output1DArr: number[];
   input: {
     size: number;
     space: number;
@@ -422,15 +434,15 @@ function DrawLineGroup(props: drawLineGroup) {
     inputSize,
     hiddenSize,
     outputSize,
-    paramW1Arr,
-    paramW2Arr,
+    input1DArr,
+    hidden1DArr,
+    output1DArr,
   } = props;
   // const [lineArr, setLineArr] = useState<JSX.Element[]>([]);
   const geometry = useRef<BufferGeometry>(null!);
 
-  const { pos, color } = useMemo(() => {
+  const pos = useMemo(() => {
     const arr = [];
-    const colors = [];
     for (let i = 0; i < inputSize; i++) {
       const inputObj = inputPos({
         index: i,
@@ -440,46 +452,41 @@ function DrawLineGroup(props: drawLineGroup) {
         space: input.space,
       });
       const inputPosVector = new Vector3(
-        inputObj.posX,
-        inputObj.posY,
-        inputObj.posZ,
+        inputObj.posX + props.inputPos.x,
+        inputObj.posY + props.inputPos.y,
+        inputObj.posZ + props.inputPos.z,
       );
 
       for (let ii = 0; ii < hiddenSize; ii++) {
         const hiddenObj = hiddenPos({
           index: ii,
           rowSize: hidden.rowSize,
-          halfRowSize: hidden.rowSize / 2,
-          halfColSize: hidden.colSize / 2,
+          colSize: hidden.colSize,
           size: hidden.size,
           space: hidden.space,
         });
 
         const hiddenPosVector = new Vector3(
-          hiddenObj.posX,
-          hiddenObj.posY,
-          hiddenObj.posZ - 2,
+          hiddenObj.posX + props.hiddenPos.x,
+          hiddenObj.posY + props.hiddenPos.y,
+          hiddenObj.posZ + props.hiddenPos.z,
         );
 
-        const color = paramW1Arr[i][ii] > 0.6 ? paramW1Arr[i][ii] * 2 : 0.1;
-        const alpha =
-          paramW1Arr[i][ii] > 0.6 ? paramW1Arr[i][ii] * 0.05 : 0.005;
+        const randInputRad = (input.size / 2) * MathUtils.randFloat(0.1, 0.9);
+        const randHiddenRad = (hidden.size / 2) * MathUtils.randFloat(0.1, 0.9);
+        const randInputAngle = MathUtils.randFloat(0, Math.PI * 2);
+        const randHiddenAngle = MathUtils.randFloat(0, Math.PI * 2);
+        const randInputX = randInputRad * Math.cos(randInputAngle);
+        const randInputY = randInputRad * Math.sin(randInputAngle);
+        const randHiddenX = randHiddenRad * Math.cos(randHiddenAngle);
+        const randHiddenY = randHiddenRad * Math.sin(randHiddenAngle);
 
-        arr.push(inputPosVector.x);
-        arr.push(inputPosVector.y);
+        arr.push(inputPosVector.x + randInputX);
+        arr.push(inputPosVector.y + randInputY);
         arr.push(inputPosVector.z);
-        arr.push(hiddenPosVector.x);
-        arr.push(hiddenPosVector.y);
+        arr.push(hiddenPosVector.x + randHiddenX);
+        arr.push(hiddenPosVector.y + randHiddenY);
         arr.push(hiddenPosVector.z);
-
-        colors.push(color);
-        colors.push(color);
-        colors.push(color);
-        colors.push(alpha);
-        colors.push(color);
-        colors.push(color);
-        colors.push(color);
-        colors.push(alpha);
       }
     }
 
@@ -487,53 +494,100 @@ function DrawLineGroup(props: drawLineGroup) {
       const hiddenObj = hiddenPos({
         index: i,
         rowSize: hidden.rowSize,
-        halfRowSize: hidden.rowSize / 2,
-        halfColSize: hidden.colSize / 2,
+        colSize: hidden.colSize,
         size: hidden.size,
         space: hidden.space,
       });
       const hiddenPosVector = new Vector3(
-        hiddenObj.posX,
-        hiddenObj.posY,
-        hiddenObj.posZ - 2,
+        hiddenObj.posX + props.hiddenPos.x,
+        hiddenObj.posY + props.hiddenPos.y,
+        hiddenObj.posZ + props.hiddenPos.z,
       );
       for (let j = 0; j < outputSize; j++) {
         const { posX, posY, posZ } = outputPos({
           index: j,
           rowSize: output.rowSize,
-          halfRowSize: output.rowSize / 2,
+          colSize: output.colSize,
           size: output.size,
           space: output.space,
         });
-        const outputPosVector = new Vector3(posX, posY, posZ - 4);
+        const outputPosVector = new Vector3(
+          posX + props.outputPos.x,
+          posY + props.outputPos.y,
+          posZ + props.outputPos.z,
+        );
+        const randHiddenRad = (hidden.size / 2) * MathUtils.randFloat(0.1, 0.9);
+        const randOutputRad = (output.size / 2) * MathUtils.randFloat(0.1, 0.9);
+        const randHiddenAngle = MathUtils.randFloat(0, Math.PI * 2);
+        const randOutputAngle = MathUtils.randFloat(0, Math.PI * 2);
+        const randHiddenX = randHiddenRad * Math.cos(randHiddenAngle);
+        const randHiddenY = randHiddenRad * Math.sin(randHiddenAngle);
+        const randOutputX = randOutputRad * Math.cos(randOutputAngle);
+        const randOutputY = randOutputRad * Math.sin(randOutputAngle);
 
-        const color = Math.pow(paramW2Arr[i][j], 2);
-        const alpha = Math.pow(paramW2Arr[i][j], 1) * 0.5;
-
-        arr.push(hiddenPosVector.x);
-        arr.push(hiddenPosVector.y);
+        arr.push(hiddenPosVector.x + randHiddenX);
+        arr.push(hiddenPosVector.y + randHiddenY);
         arr.push(hiddenPosVector.z);
-        arr.push(outputPosVector.x);
-        arr.push(outputPosVector.y);
+        arr.push(outputPosVector.x + randOutputX);
+        arr.push(outputPosVector.y + randOutputY);
         arr.push(outputPosVector.z);
-
-        colors.push(color);
-        colors.push(color);
-        colors.push(color);
-        colors.push(alpha);
-        colors.push(color);
-        colors.push(color);
-        colors.push(color);
-        colors.push(alpha);
       }
     }
 
     if (geometry.current) {
       geometry.current.attributes.position.needsUpdate = true;
+    }
+    return new Float32Array(arr);
+  }, []);
+
+  const color = useMemo(() => {
+    const colors = [];
+    for (let i = 0; i < inputSize; i++) {
+      const color1 = input1DArr[i];
+      const alpha1 = MathUtils.clamp(input1DArr[i] * 0.3, 0.02, 1);
+
+      for (let ii = 0; ii < hiddenSize; ii++) {
+        const color2 = hidden1DArr[ii];
+        const alpha2 = hidden1DArr[ii] * hidden1DArr[ii] * 0.1;
+
+        colors.push(
+          color1,
+          color1,
+          color1,
+          alpha1,
+          color2,
+          color2,
+          color2,
+          alpha2,
+        );
+      }
+    }
+
+    for (let i = 0; i < hiddenSize; i++) {
+      const color1 = hidden1DArr[i];
+      const alpha1 = MathUtils.clamp(hidden1DArr[i], 0.1, 1);
+      for (let j = 0; j < outputSize; j++) {
+        const color2 = output1DArr[j];
+        const alpha2 = MathUtils.clamp(output1DArr[j] * 3, 0.01, 1);
+
+        colors.push(
+          color1,
+          color1,
+          color1,
+          alpha1,
+          color2,
+          color2,
+          color2,
+          alpha2,
+        );
+      }
+    }
+
+    if (geometry.current) {
       geometry.current.attributes.color.needsUpdate = true;
     }
-    return { pos: new Float32Array(arr), color: new Float32Array(colors) };
-  }, []);
+    return new Float32Array(colors);
+  }, [input1DArr, hidden1DArr, output1DArr]);
 
   return (
     <lineSegments>
