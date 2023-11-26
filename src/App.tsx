@@ -8,6 +8,7 @@ import { BufferGeometry, DoubleSide, MathUtils, Texture, Vector3 } from 'three';
 import { button, useControls } from 'leva';
 import Matrix from 'ml-matrix';
 import { calcSigmoid, calcSoftMax, sigmoid } from './components/functions';
+import { CameraMovement } from './components/camera-movement';
 
 function App() {
   const inputSize = 28 * 28;
@@ -197,7 +198,7 @@ function App() {
             ) : null}
           </group>
 
-          <OrbitControls />
+          <CameraMovement />
         </Canvas>
       </div>
     </>
