@@ -20,8 +20,8 @@ function App() {
   const outputRowSize = 3;
   const outputColSize = 4;
 
-  const inputPlane = { size: 1 / 14, space: 0.02 }; // const size = 1 / 14       const space = 0.02;
-  const hiddenPlane = { size: 0.2, space: 0.08 };
+  const inputPlane = { size: 1 / 10, space: 0.02 }; // const size = 1 / 14       const space = 0.02;
+  const hiddenPlane = { size: 0.3, space: 0.1 };
   const outputPlane = { size: 1.2, space: 0.1 };
 
   const inputPos = new Vector3(0, 0, 0);
