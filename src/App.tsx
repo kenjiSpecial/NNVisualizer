@@ -130,12 +130,13 @@ function App() {
   }, [inputHiddenWMatrix, hiddenOutputWMatrix]);
 
   useEffect(() => {
-    fetch('/neural.json')
+    fetch('/neural-param.json')
       .then((res) => res.json())
       .then((data) => {
         setData(data);
       });
   }, []);
+
   const clickbutton = useCallback(() => {
     autoNumCntRef.current = Math.floor(Math.random() * ministSampleData.length);
     isButtonClicked.current = true;
