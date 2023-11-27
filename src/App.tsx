@@ -38,9 +38,12 @@ function App() {
   const hiddenPos = new Vector3(0, 0, -4);
   const outputPos = new Vector3(0, 0, -8);
 
-  const [data, setData] = useState<
-    { W1: number[][]; b1: number[]; W2: number[][]; b2: number[] }[] | null
-  >(null);
+  const [data, setData] = useState<{
+    W1: number[][];
+    b1: number[];
+    W2: number[][];
+    b2: number[];
+  } | null>(null);
 
   const isLoading = useMemo(() => {
     return data === null;
@@ -57,7 +60,7 @@ function App() {
 
   const paramData = useMemo(() => {
     if (!data) return null;
-    return data[data?.length - 1];
+    return data;
   }, [data]);
 
   // インプットとparamsのW1をかけて、バイアスを足す
