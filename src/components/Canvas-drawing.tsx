@@ -73,8 +73,10 @@ export const CanvasDrawing: React.FC<{
       isDrawing = true;
       const { clientX, clientY } =
         event instanceof MouseEvent ? event : event.touches[0];
-      lastX = clientX - canvas.offsetLeft;
-      lastY = clientY - canvas.offsetTop;
+      const rect = canvas.getBoundingClientRect();
+      lastX = clientX - rect.left;
+      lastY = clientY - rect.top;
+
       pt.current = { x: lastX, y: lastY };
 
       context.fillStyle = 'black';
@@ -89,8 +91,9 @@ export const CanvasDrawing: React.FC<{
       if (!isDrawing) return;
       const { clientX, clientY } =
         event instanceof MouseEvent ? event : event.touches[0];
-      const x = clientX - canvas.offsetLeft;
-      const y = clientY - canvas.offsetTop;
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
       pt.current = { x, y };
 
       // 滑らかに線を描画する
@@ -101,7 +104,7 @@ export const CanvasDrawing: React.FC<{
       context.moveTo(lastX, lastY);
       context.lineTo(x, y);
       context.strokeStyle = 'white';
-      context.lineWidth = 40;
+      context.lineWidth = event instanceof MouseEvent ? 40 : 20;
       context.stroke();
       context.closePath();
 
@@ -167,9 +170,6 @@ export const CanvasDrawing: React.FC<{
         height={canvasWidth}
         className="sm:w-full cursor-pointer"
       />
-      <div>
-        {pt.current.x}, {pt.current.y}
-      </div>
     </>
   );
 };
