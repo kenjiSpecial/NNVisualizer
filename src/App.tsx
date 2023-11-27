@@ -1,15 +1,24 @@
 // 数字をスライドすることができる
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import './App.css';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Line } from '@react-three/drei';
-import mnist from 'mnist';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import { BufferGeometry, DoubleSide, MathUtils, Texture, Vector3 } from 'three';
-import { button, useControls } from 'leva';
 import Matrix from 'ml-matrix';
-import { calcSigmoid, calcSoftMax, sigmoid } from './components/functions';
+import { calcSigmoid, calcSoftMax } from './components/functions';
+import { CanvasDrawing } from './components/Canvas-drawing';
+import { ministSampleData } from './components/mnist-sample';
 
 function App() {
+  const autoNumCntRef = useRef(
+    Math.floor(Math.random() * ministSampleData.length),
+  );
+  const isButtonClicked = useRef(false);
+
+  const [inputData, setInputData] = useState<number[]>(
+    ministSampleData[autoNumCntRef.current],
+  );
+
   const inputSize = 28 * 28;
   const inputRowSize = 28;
   const inputColsize = 28;
@@ -22,7 +31,7 @@ function App() {
 
   const inputPlane = { size: 1 / 10, space: 0.02 }; // const size = 1 / 14       const space = 0.02;
   const hiddenPlane = { size: 0.3, space: 0.1 };
-  const outputPlane = { size: 1.2, space: 0.1 };
+  const outputPlane = { size: 2, space: 0.3 };
 
   const inputPos = new Vector3(0, 0, 0);
   const hiddenPos = new Vector3(0, 0, -4);
@@ -31,12 +40,7 @@ function App() {
   const [data, setData] = useState<
     { W1: number[][]; b1: number[]; W2: number[][]; b2: number[] }[] | null
   >(null);
-  // const count = 0;
-  const testDataCnt = 100;
-  const { count } = useControls({
-    count: { value: 0, min: 0, max: testDataCnt - 1, step: 1 },
-  });
-  const testData = useMemo(() => mnist.set(0, testDataCnt).test, []);
+
   const paramData = useMemo(() => {
     if (!data) return null;
     return data[data?.length - 1];
@@ -44,17 +48,16 @@ function App() {
 
   // インプットとparamsのW1をかけて、バイアスを足す
   const hiddenValue = useMemo(() => {
-    if (!paramData || !testData) return null;
+    if (!paramData || !inputData) return null;
 
-    const inp = new Matrix([testData[count].input]);
+    const inp = new Matrix([inputData]);
     const wMatrix = new Matrix(paramData.W1);
     const bMatrix = new Matrix([paramData.b1]);
     const res = inp.mmul(wMatrix).add(bMatrix);
     const sigmoidMatrix = calcSigmoid(res);
     return { wMatrix: wMatrix, hiddenValueMatrix: sigmoidMatrix };
-  }, [paramData, testData, count]);
+  }, [paramData, inputData]);
   const hiddenValueMatrix = hiddenValue?.hiddenValueMatrix;
-  console.log(hiddenValueMatrix?.to2DArray());
   const inputHiddenWMatrix = hiddenValue?.wMatrix;
 
   const outputValue = useMemo(() => {
@@ -119,20 +122,28 @@ function App() {
         setData(data);
       });
   }, []);
+  const clickbutton = useCallback(() => {
+    autoNumCntRef.current = Math.floor(Math.random() * ministSampleData.length);
+    isButtonClicked.current = true;
+    setInputData(ministSampleData[autoNumCntRef.current]);
+  }, []);
 
   return (
     <>
-      <div className="h-screen w-screen bg-slate-500 block" id="canvas">
+      <div
+        className="h-screen w-screen bg-gradient-to-t from-orange-100 to-blue-400 block cursor-grab "
+        id="canvas"
+      >
         <Canvas camera={{ position: [2, 2, 8] }}>
           <ambientLight />
           <pointLight position={[5, 5, 5]} />
 
           <group position={[0, 0, 2]}>
-            {testData ? (
+            {inputData ? (
               <PixelPlaneMesh
                 renderOrder={4}
                 position={inputPos}
-                data={testData[count]}
+                data={inputData}
                 size={inputPlane.size}
                 space={inputPlane.space}
                 rowSize={inputRowSize}
@@ -166,7 +177,7 @@ function App() {
               />
             ) : null}
 
-            {paramArr && hiddenValueMatrix && outputValueMatrix ? (
+            {inputData && paramArr && hiddenValueMatrix && outputValueMatrix ? (
               <DrawLineGroup
                 inputSize={inputSize}
                 hiddenSize={hiddenSize}
@@ -176,7 +187,7 @@ function App() {
                 outputPos={outputPos}
                 paramW1Arr={paramArr.paramW1Arr}
                 paramW2Arr={paramArr.paramW2Arr}
-                input1DArr={testData[count].input}
+                input1DArr={inputData}
                 hidden1DArr={hiddenValueMatrix.to1DArray()}
                 output1DArr={outputValueMatrix.to1DArray()}
                 renderOrder={1}
@@ -207,12 +218,75 @@ function App() {
           <OrbitControls />
         </Canvas>
       </div>
+      {/* サイドバーを左側にオーバーレイする */}
+      <div className="fixed flex flex-col justify-between left-0 top-0 h-full w-96 bg-gray-100 z-10 bg-opacity-50 p-8 border-r border-gray-400">
+        <div>
+          <div className="text-base sm:text-lg md:text-2xl font-bold mb-2">
+            <p>NNビジュアライザー</p>
+          </div>
+          <div className="text-base">
+            <p>
+              <a
+                href="https://amzn.asia/d/fKFUgBV"
+                target="_blank"
+                className="text-blue-700 underline hover:text-blue-900"
+              >
+                ゼロから作るDeep Learning
+              </a>
+              の第4章のニューラルネットワークをリアルタイムに可視化しています。
+            </p>
+            <p>
+              入力層756個、隠れ層50個、出力層10個のニューラルネットワークを可視化しています。
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-end">
+          <div className="text-lg font-bold mb-2">スケッチキャンバス</div>
+          <div className="mb-4">
+            <div className="mb-2">
+              <CanvasDrawing
+                setInputData={setInputData}
+                inputData={inputData}
+                isButtonClicked={isButtonClicked}
+              />
+            </div>
+            <div className="text-right">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                onClick={clickbutton}
+              >
+                画像テスト
+              </button>
+            </div>
+          </div>
+          <div className="text-base mb-4">
+            <p>
+              スケッチキャンバスにスケッチをするか、画像テストボタンを押してください。自動でニューラルネットワークが推論を行います。
+            </p>
+            <p>スケッチは一筆書きになっています。</p>
+          </div>
+          <div>
+            <p className="text-right">
+              Code:{' '}
+              <a
+                href="https://github.com/kenjiSpecial/NNVisualizer"
+                className="text-blue-700 underline hover:text-blue-900"
+                target="_blank"
+              >
+                kenjiSpecial/NNVisualizer
+              </a>
+            </p>
+            <p></p>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
 
 type PixelPlaneProps = JSX.IntrinsicElements['group'] & {
-  data: { input: number[]; output: number[] };
+  data: number[];
   size: number;
   space: number;
   rowSize: number;
@@ -235,7 +309,7 @@ function inputPos(props: {
 
 function PixelPlaneMesh(props: PixelPlaneProps) {
   // const data = [1, 2, 3, 4];
-  const data = props.data.input;
+  const data = props.data;
   const { size, space, rowSize } = props;
   const halfRowSize = rowSize / 2;
 
