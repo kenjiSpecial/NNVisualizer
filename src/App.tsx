@@ -18,6 +18,7 @@ function App() {
   const [inputData, setInputData] = useState<number[]>(
     ministSampleData[autoNumCntRef.current],
   );
+  // const [isLoading, setIsLoading] = useState(true);
 
   const inputSize = 28 * 28;
   const inputRowSize = 28;
@@ -40,6 +41,19 @@ function App() {
   const [data, setData] = useState<
     { W1: number[][]; b1: number[]; W2: number[][]; b2: number[] }[] | null
   >(null);
+
+  const isLoading = useMemo(() => {
+    return data === null;
+  }, [data]);
+  const displayLoading = useMemo(() => {
+    return isLoading ? 'block' : 'hidden';
+  }, [isLoading]);
+  const displayCanvas = useMemo(() => {
+    return isLoading ? 'hidden' : 'block';
+  }, [isLoading]);
+  const displaySideBar = useMemo(() => {
+    return isLoading ? 'hidden' : 'flex';
+  }, [isLoading]);
 
   const paramData = useMemo(() => {
     if (!data) return null;
@@ -134,89 +148,102 @@ function App() {
         className="h-screen w-screen bg-gradient-to-t from-orange-100 to-blue-400 block cursor-grab "
         id="canvas"
       >
-        <Canvas camera={{ position: [2, 2, 8] }}>
-          <ambientLight />
-          <pointLight position={[5, 5, 5]} />
+        <div className={`${displayCanvas} w-full h-full`}>
+          <Canvas camera={{ position: [2, 2, 8] }}>
+            <ambientLight />
+            <pointLight position={[5, 5, 5]} />
 
-          <group position={[0, 0, 2]}>
-            {inputData ? (
-              <PixelPlaneMesh
-                renderOrder={4}
-                position={inputPos}
-                data={inputData}
-                size={inputPlane.size}
-                space={inputPlane.space}
-                rowSize={inputRowSize}
-                colSize={inputColsize}
-              />
-            ) : null}
+            <group position={[0, 0, 2]}>
+              {inputData ? (
+                <PixelPlaneMesh
+                  renderOrder={4}
+                  position={inputPos}
+                  data={inputData}
+                  size={inputPlane.size}
+                  space={inputPlane.space}
+                  rowSize={inputRowSize}
+                  colSize={inputColsize}
+                />
+              ) : null}
 
-            {hiddenValueMatrix ? (
-              <ParamsPixelPlaneMesh
-                renderOrder={3}
-                position={hiddenPos}
-                hiddenSize={hiddenSize}
-                hiddenValueArr={hiddenValueMatrix.to1DArray()}
-                size={hiddenPlane.size}
-                space={hiddenPlane.space}
-                rowSize={hiddenRowSize}
-                colSize={hiddenColSize}
-              />
-            ) : null}
+              {hiddenValueMatrix ? (
+                <ParamsPixelPlaneMesh
+                  renderOrder={3}
+                  position={hiddenPos}
+                  hiddenSize={hiddenSize}
+                  hiddenValueArr={hiddenValueMatrix.to1DArray()}
+                  size={hiddenPlane.size}
+                  space={hiddenPlane.space}
+                  rowSize={hiddenRowSize}
+                  colSize={hiddenColSize}
+                />
+              ) : null}
 
-            {outputValueMatrix ? (
-              <OutputMeshGroup
-                renderOrder={2}
-                position={outputPos}
-                outputSize={outputSize}
-                outputValueArr={outputValueMatrix.to1DArray()}
-                size={outputPlane.size}
-                space={outputPlane.space}
-                rowsize={outputRowSize}
-                colSize={outputColSize}
-              />
-            ) : null}
+              {outputValueMatrix ? (
+                <OutputMeshGroup
+                  renderOrder={2}
+                  position={outputPos}
+                  outputSize={outputSize}
+                  outputValueArr={outputValueMatrix.to1DArray()}
+                  size={outputPlane.size}
+                  space={outputPlane.space}
+                  rowsize={outputRowSize}
+                  colSize={outputColSize}
+                />
+              ) : null}
 
-            {inputData && paramArr && hiddenValueMatrix && outputValueMatrix ? (
-              <DrawLineGroup
-                inputSize={inputSize}
-                hiddenSize={hiddenSize}
-                outputSize={outputSize}
-                inputPos={inputPos}
-                hiddenPos={hiddenPos}
-                outputPos={outputPos}
-                paramW1Arr={paramArr.paramW1Arr}
-                paramW2Arr={paramArr.paramW2Arr}
-                input1DArr={inputData}
-                hidden1DArr={hiddenValueMatrix.to1DArray()}
-                output1DArr={outputValueMatrix.to1DArray()}
-                renderOrder={1}
-                input={
-                  {
-                    size: inputPlane.size,
-                    space: inputPlane.space,
-                    rowSize: inputRowSize,
-                    colSize: inputColsize,
-                  } as drawLineGroup['input']
-                }
-                hidden={{
-                  size: hiddenPlane.size,
-                  space: hiddenPlane.space,
-                  rowSize: hiddenRowSize,
-                  colSize: hiddenColSize,
-                }}
-                output={{
-                  size: outputPlane.size,
-                  space: outputPlane.space,
-                  rowSize: outputRowSize,
-                  colSize: outputColSize,
-                }}
-              />
-            ) : null}
-          </group>
+              {inputData &&
+              paramArr &&
+              hiddenValueMatrix &&
+              outputValueMatrix ? (
+                <DrawLineGroup
+                  inputSize={inputSize}
+                  hiddenSize={hiddenSize}
+                  outputSize={outputSize}
+                  inputPos={inputPos}
+                  hiddenPos={hiddenPos}
+                  outputPos={outputPos}
+                  paramW1Arr={paramArr.paramW1Arr}
+                  paramW2Arr={paramArr.paramW2Arr}
+                  input1DArr={inputData}
+                  hidden1DArr={hiddenValueMatrix.to1DArray()}
+                  output1DArr={outputValueMatrix.to1DArray()}
+                  renderOrder={1}
+                  input={
+                    {
+                      size: inputPlane.size,
+                      space: inputPlane.space,
+                      rowSize: inputRowSize,
+                      colSize: inputColsize,
+                    } as drawLineGroup['input']
+                  }
+                  hidden={{
+                    size: hiddenPlane.size,
+                    space: hiddenPlane.space,
+                    rowSize: hiddenRowSize,
+                    colSize: hiddenColSize,
+                  }}
+                  output={{
+                    size: outputPlane.size,
+                    space: outputPlane.space,
+                    rowSize: outputRowSize,
+                    colSize: outputColSize,
+                  }}
+                />
+              ) : null}
+            </group>
 
-          <OrbitControls />
-        </Canvas>
+            <OrbitControls />
+          </Canvas>
+        </div>
+        {/* 画面の中央にLOADINGを表示する */}
+        <div
+          className={`${displayLoading} absolute top-0 left-0 w-full h-full`}
+        >
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-4xl font-bold text-white">LOADING</div>
+          </div>
+        </div>
       </div>
       {/* サイドバーを左側にオーバーレイする */}
       <div className="fixed flex flex-col justify-between left-0 top-0 h-full w-96 bg-gray-100 z-10 bg-opacity-50 p-8 border-r border-gray-400">
@@ -241,7 +268,7 @@ function App() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-end">
+        <div className={`${displaySideBar} flex-col justify-end`}>
           <div className="text-lg font-bold mb-2">スケッチキャンバス</div>
           <div className="mb-4">
             <div className="mb-2">
