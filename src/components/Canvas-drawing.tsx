@@ -78,6 +78,10 @@ export const CanvasDrawing: React.FC<{
 
       context.fillStyle = 'black';
       context.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (event instanceof TouchEvent) {
+        event.preventDefault();
+      }
     };
 
     const draw = (event: MouseEvent | TouchEvent) => {
@@ -113,6 +117,10 @@ export const CanvasDrawing: React.FC<{
         .map((v) => v / 255);
 
       setInputData(normalizedData);
+
+      if (event instanceof TouchEvent) {
+        event.preventDefault();
+      }
     };
 
     const stopDrawing = () => {
@@ -139,10 +147,11 @@ export const CanvasDrawing: React.FC<{
 
   const canvasWidth = useMemo(() => {
     // console.log(parentRef.current?.offsetWidth);
-    if (!windowWidth) return 320;
-
+    if (!windowWidth) {
+      return window.innerWidth < 640 ? 200 : 320;
+    }
     if (windowWidth < 640) {
-      return 240;
+      return 200;
     } else {
       return 320;
     }
