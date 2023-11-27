@@ -127,11 +127,11 @@ export const CanvasDrawing: React.FC<{
       isDrawing = false;
     };
 
-    canvas.addEventListener('mousedown', startDrawing);
+    // canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('touchstart', startDrawing);
-    canvas.addEventListener('mousemove', draw);
+    // canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('touchmove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
+    // canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('touchend', stopDrawing);
     // resize
 
