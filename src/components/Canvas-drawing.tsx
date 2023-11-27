@@ -15,9 +15,9 @@ export const CanvasDrawing: React.FC<{
     vCanvas.height = 28;
     return vCanvas.getContext('2d', { willReadFrequently: true });
   }, []);
+  const pt = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    console.log(' ss');
     const canvas = canvasRef.current;
     if (!canvas) return;
     const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -75,6 +75,7 @@ export const CanvasDrawing: React.FC<{
         event instanceof MouseEvent ? event : event.touches[0];
       lastX = clientX - canvas.offsetLeft;
       lastY = clientY - canvas.offsetTop;
+      pt.current = { x: lastX, y: lastY };
 
       context.fillStyle = 'black';
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -90,6 +91,7 @@ export const CanvasDrawing: React.FC<{
         event instanceof MouseEvent ? event : event.touches[0];
       const x = clientX - canvas.offsetLeft;
       const y = clientY - canvas.offsetTop;
+      pt.current = { x, y };
 
       // 滑らかに線を描画する
       context.lineJoin = 'round';
@@ -127,11 +129,11 @@ export const CanvasDrawing: React.FC<{
       isDrawing = false;
     };
 
-    // canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('touchstart', startDrawing);
-    // canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('touchmove', draw);
-    // canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('touchend', stopDrawing);
     // resize
 
@@ -158,11 +160,16 @@ export const CanvasDrawing: React.FC<{
   }, [windowWidth, parentRef]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={canvasWidth}
-      height={canvasWidth}
-      className="sm:w-full cursor-pointer"
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        width={canvasWidth}
+        height={canvasWidth}
+        className="sm:w-full cursor-pointer"
+      />
+      <div>
+        {pt.current.x}, {pt.current.y}
+      </div>
+    </>
   );
 };
