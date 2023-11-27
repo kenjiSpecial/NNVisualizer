@@ -8,6 +8,7 @@ import Matrix from 'ml-matrix';
 import { calcSigmoid, calcSoftMax } from './components/functions';
 import { CanvasDrawing } from './components/Canvas-drawing';
 import { ministSampleData } from './components/mnist-sample';
+import { useWindowSize } from './components/use-window-size';
 
 function App() {
   const autoNumCntRef = useRef(
@@ -18,7 +19,8 @@ function App() {
   const [inputData, setInputData] = useState<number[]>(
     ministSampleData[autoNumCntRef.current],
   );
-  // const [isLoading, setIsLoading] = useState(true);
+  const ref = useRef<HTMLDivElement>(null);
+  const windowSize = useWindowSize();
 
   const inputSize = 28 * 28;
   const inputRowSize = 28;
@@ -149,10 +151,10 @@ function App() {
   return (
     <>
       <div
-        className="h-screen w-screen bg-gradient-to-t from-orange-100 to-blue-400 block cursor-grab "
+        className="h-screen  w-screen bg-gradient-to-t from-orange-100 to-blue-400 block cursor-grab "
         id="canvas"
       >
-        <div className={`${displayCanvas} w-full h-full`}>
+        <div className={`${displayCanvas} w-full h-2/3 sm:h-screen`}>
           <Canvas camera={{ position: [2, 2, 8] }}>
             <ambientLight />
             <pointLight position={[5, 5, 5]} />
@@ -249,12 +251,25 @@ function App() {
           </div>
         </div>
       </div>
-      {/* サイドバーを左側にオーバーレイする */}
-      <div className="fixed flex flex-col justify-between left-0 top-0 h-full w-96 bg-gray-100 z-10 bg-opacity-50 p-8 border-r border-gray-400">
-        <div>
-          <div className="text-base sm:text-lg md:text-2xl font-bold mb-2">
+
+      <div
+        className="
+          fixed 
+          sm:flex sm:flex-col sm:justify-between 
+          left-0 
+          bottom-0 sm:top-0 
+          sm:h-full 
+          w-full sm:w-96 
+          bg-gray-100 z-10 bg-opacity-50 
+          p-3
+          sm:p-8 border-r border-gray-400
+      "
+      >
+        <div className="hidden sm:block">
+          <div className="text-2xl font-bold mb-2 ">
             <p>NNビジュアライザー</p>
           </div>
+
           <div className="text-base">
             <p>
               <a
@@ -272,33 +287,37 @@ function App() {
           </div>
         </div>
 
-        <div className={`${displaySideBar} flex-col justify-end`}>
-          <div className="text-lg font-bold mb-2">スケッチキャンバス</div>
-          <div className="mb-4">
+        <div className={`${displaySideBar} flex-col justify-end`} ref={ref}>
+          <div className="text-base sm:text-lg font-bold mb-1 sm:mb-2">
+            スケッチキャンバス
+          </div>
+          <div className="mb-2 sm:mb-4">
             <div className="mb-2">
               <CanvasDrawing
                 setInputData={setInputData}
                 inputData={inputData}
                 isButtonClicked={isButtonClicked}
+                windowWidth={windowSize.width}
+                parentRef={ref}
               />
             </div>
-            <div className="text-right">
+            <div className="text-left sm:text-right">
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                className="bg-blue-500 hover:bg-blue-700 text-sm sm:text-base text-white font-bold py-2 px-4 rounded"
                 onClick={clickbutton}
               >
                 画像テスト
               </button>
             </div>
           </div>
-          <div className="text-base mb-4">
+          <div className="text-xs sm:text-base mb-2 sm:mb-4 block">
             <p>
               スケッチキャンバスにスケッチをするか、画像テストボタンを押してください。自動でニューラルネットワークが推論を行います。
             </p>
             <p>スケッチは一筆書きになっています。</p>
           </div>
           <div>
-            <p className="text-right">
+            <p className="text-sm sm:text-base text-right">
               Code:{' '}
               <a
                 href="https://github.com/kenjiSpecial/NNVisualizer"

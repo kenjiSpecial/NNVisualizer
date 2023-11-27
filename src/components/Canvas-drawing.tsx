@@ -4,7 +4,9 @@ export const CanvasDrawing: React.FC<{
   setInputData: (data: number[]) => void;
   inputData: number[];
   isButtonClicked: React.MutableRefObject<boolean>;
-}> = ({ setInputData, inputData, isButtonClicked }) => {
+  windowWidth: number | undefined;
+  parentRef: React.RefObject<HTMLDivElement>;
+}> = ({ setInputData, inputData, isButtonClicked, windowWidth, parentRef }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // 28 * 28の2D Contextを作成する
   const vContext = useMemo(() => {
@@ -135,12 +137,23 @@ export const CanvasDrawing: React.FC<{
     };
   }, []);
 
+  const canvasWidth = useMemo(() => {
+    // console.log(parentRef.current?.offsetWidth);
+    if (!windowWidth) return 320;
+
+    if (windowWidth < 640) {
+      return 240;
+    } else {
+      return 320;
+    }
+  }, [windowWidth, parentRef]);
+
   return (
     <canvas
       ref={canvasRef}
-      width={320}
-      height={320}
-      className="w-full cursor-pointer"
+      width={canvasWidth}
+      height={canvasWidth}
+      className="sm:w-full cursor-pointer"
     />
   );
 };
