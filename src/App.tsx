@@ -327,7 +327,20 @@ function App() {
                 kenjiSpecial/NNVisualizer
               </a>
             </p>
-            <p></p>
+          </div>
+          <div>
+            <h2 className="text-base sm:text-2xl font-bold mb-2">関連</h2>
+            <ul className="text-sm sm:text-base">
+              <li>
+                <a
+                  href="https://ks-cnnvisualizer.netlify.app/"
+                  className="text-blue-700 underline hover:text-blue-900"
+                  target="_blank"
+                >
+                  CNNビジュアライザー
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
