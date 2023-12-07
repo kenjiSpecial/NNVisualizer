@@ -44,3 +44,7 @@ vite build
 ## ライセンス
 
 このプロジェクトはMITライセンスの下で公開されています。
+
+## 関連
+
+- [kenjiSpecial/CNNVisualizer](https://github.com/kenjiSpecial/CNNVisualizer)
